@@ -1,4 +1,4 @@
-*.db
+backend/*.db
 .venv
 .idea
 # Default ignored files
