@@ -1,7 +1,7 @@
 import datetime
 
 from enums import Status
-from database import Base, engine
+from database import Base
 from sqlalchemy import Column, Integer, String, DateTime, Enum as SAEnum
 
 

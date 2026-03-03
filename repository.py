@@ -19,7 +19,7 @@ def fetch_all_tasks(session: Session = Depends(SessionLocal), status: Optional[S
 
     if status is not None:
         log.info("Fetching all tasks by status: {status}".format(status=status))
-        tasks = session.query(Task).filter(Task.status.lower() == status.lower()).all()
+        tasks = session.query(Task).filter(Task.status == status).all()
     else:
         tasks = session.query(Task).all()
 
@@ -60,20 +60,17 @@ def update_task(task_in: TaskUpdate, session: Session = Depends(SessionLocal)):
         log.info(f"Task was not found: {task}")
         return None
 
-    newTask = Task(**task_in.model_dump())
+    for field, value in task_in.model_dump(exclude_unset=True).items():
+        setattr(task, field, value)
 
-    newTask.id = task.id
-    newTask.updated_at = datetime.now(datetime.UTC)
-
-    session.update(newTask)
     session.commit()
-    session.refresh(newTask)
+    session.refresh(task)
     log.info("Task Updated!")
-    return newTask
+    return task
 
 def delete_task(task_id: int, session: Session = Depends(SessionLocal)):
     log.info(f"Deleting task: {task_id}")
-    task = fetch_task_by_id(session, task_id)
+    task = fetch_task_by_id(session=session, task_id=task_id)
     if not task:
         return None
     session.delete(task)

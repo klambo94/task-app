@@ -1,37 +1,15 @@
-import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from database import Base
-from main import app, get_db
+from email.quoprimime import body_decode
 
-TEST_DATABASE_URL = "sqlite:///:memory:"
+from enums import Status
+from schemas import TaskCreate
 
-@pytest.fixture(scope="function")
-def client():
-    engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
-    Base.metadata.create_all(bind=engine)
-    SessionLocal = sessionmaker(bind=engine)
 
-    def override_get_db():
-        db = SessionLocal()
-        try:
-            yield db
-        finally:
-            db.close()
-
-    # This is the key — swap out the real DB for the test DB
-    app.dependency_overrides[get_db] = override_get_db
-
-    with TestClient(app) as c:
-        yield c
-
-    app.dependency_overrides.clear()
-    Base.metadata.drop_all(bind=engine)
 
 
 def test_create_task(client):
-    response = client.post("/tasks", json={"name": "Buy milk", "description": "From the store"})
+    task_in = TaskCreate(name="Buy milk", description="From the store", status=Status.OPEN)
+    response = client.post("/tasks", json=task_in.model_dump(mode="json"))
+    print(response.json())
     assert response.status_code == 201
     assert response.json()["name"] == "Buy milk"
 
@@ -40,8 +18,11 @@ def test_get_task_not_found(client):
     assert response.status_code == 404
 
 def test_list_tasks_filter_by_status(client):
-    client.post("/tasks", json={"name": "Task 1", "description": "..."})
-    client.post("/tasks", json={"name": "Task 2", "description": "..."})
+    task1 = TaskCreate(name="Task 1", description="Desc 1", status=Status.OPEN)
+    task2 = TaskCreate(name="Task 2", description="Desc 2", status=Status.OPEN)
+
+    client.post("/tasks", json=task1.model_dump(mode="json"))
+    client.post("/tasks", json=task2.model_dump(mode="json"))
 
     response = client.get("/tasks?status=open")
     assert response.status_code == 200
