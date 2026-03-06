@@ -1,26 +1,66 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+    --background: oklch(1 0 0);
+    --foreground: var(--color-black);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --font-dm-sans: "DM_Sans";
+    --font-sans: var(--font-dm-sans);
+
+    --color-white: oklch(1 0 0);
+    --color-light-grey: oklch(0.7574 0.0419 256.79);
+    --color-blue-gray: oklch(0.7107 0.0703 256.79);
+    --color-blue-black: oklch(0.2077 0.0398 265.75);
+    --color-black: oklch(0.1762 0.0148 270.53);
+    --color-pink-purple: oklch(0.65 0.1832 318.74);
+    --color-lavender: oklch(0.6309 0.1061 297);
+    --color-light-purple: oklch(0.5699 0.1678 283.71);
+    --color-red: oklch(0.3785 0.152771 22.978);
+    --color-green: oklch(0.5707 0.1205 150.11);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@layer components {
+    .btn {
+        @apply inline-flex items-center gap-2 px-4 py-2
+        rounded-lg text-sm font-semibold cursor-pointer
+        transition-transform hover:-translate-y-px
+        w-full justify-center appearance-none
+        disabled:cursor-not-allowed;
+    }
+
+    .btn-primary {
+        @apply bg-blue-black text-white;
+    }
+
+    .btn-danger {
+        @apply bg-blue-black text-red-200;
+    }
+
+    .btn-filter {
+        @apply px-3.5 py-2 rounded-lg text-sm font-semibold
+        cursor-pointer border border-transparent whitespace-nowrap
+        transition-all duration-150 tracking-wide appearance-none;
+    }
+    .btn-dropdown {
+        @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold
+        cursor-pointer border border-transparent
+        transition-all duration-150 whitespace-nowrap;
+    }
 }
+
+/*@media (prefers-color-scheme: dark) {*/
+/*  :root {*/
+/*    --background: var(--color-black);*/
+/*    --foreground: oklch(1 0 0);*/
+/*  }*/
+/*}*/
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-dm-sans), serif
 }

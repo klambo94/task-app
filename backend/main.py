@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy.orm import Session
@@ -7,11 +8,22 @@ from models import Status, Task
 from fastapi import FastAPI, Depends, HTTPException
 
 import repository
+from repository import fetch_task_by_id
 from schemas import TaskResponse, TaskCreate, TaskUpdate
+from fastapi.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(engine)
 app = FastAPI()
 
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000",  # Next.js dev server
+    "http://127.0.0.1:3000"],
+    # "http://localhost:3000"],  # Next.js prod server TODO update with prod server info
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def get_db():
@@ -47,25 +59,23 @@ async def create_task(task: TaskCreate, session: Session = Depends(get_db)):
         return repository.create_task(task, session=session)
 
 
-@app.patch("/task/update/status/{task_id}", response_model= TaskResponse)
-async def update_status(task: TaskUpdate, status: str, session: Session = Depends(get_db)):
-    if task is None or task.id is None:
-        raise HTTPException(status_code=404, detail="Malformed task id!")
-
-    task.status = Status(status)
-    updated = repository.update_task(task_in=task, session=session)
-
-    if not updated:
-        raise HTTPException(status_code=404, detail="Task not found!")
-
-    return task
-
-@app.patch("/task/update/{task_id}", response_model= TaskResponse)
-async def update_task(task: TaskUpdate, session: Session = Depends(get_db)):
-    if task is None or task.id is None or  0 <= task.id > repository.count_of_tasks(session=session):
-        raise HTTPException(status_code=404, detail="Malformed task id!")
+@app.patch("/task/{task_id}", response_model= TaskResponse)
+async def update_task(task_id: int, task_in: TaskUpdate, session: Session = Depends(get_db)):
+    print("Updating Task: {}".format(task_in))
+    if task_id is None or task_id is None or  0 <= task_id > repository.count_of_tasks(session=session):
+        return None
     else:
-        return repository.update_task(task_in=task, session=session)
+        task = fetch_task_by_id(task_id=task_id, session=session)
+        if not task:
+            return None
+
+        for field, value in task_in.model_dump(exclude_unset=True).items():
+            setattr(task, field, value)
+
+        task.updated_at = datetime.now(timezone.utc)  # set it here
+        session.commit()
+        session.refresh(task)
+        return task
 
 
 @app.delete("/task/delete/{task_id}")
