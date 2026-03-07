@@ -1,5 +1,5 @@
 backend/*.db
-.venv/
+backend/.venv/
 .idea/
 # Default ignored files
 /shelf/
