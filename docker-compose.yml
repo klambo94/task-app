@@ -1,0 +1,37 @@
+services:
+  postgres_db:
+    container_name: task_app_db
+    image: postgres:latest
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - task_app_postgres:/var/lib/postgresql/18/docker
+    ports:
+      - "5432:5432"
+
+
+  backend:
+    build: ./backend
+    container_name: task_app_backend
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres_db
+
+  frontend:
+    build: ./frontend
+    container_name: task_app_frontend
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  task_app_postgres:
