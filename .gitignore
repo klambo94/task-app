@@ -1,6 +1,6 @@
 backend/*.db
-.venv
-.idea
+.venv/
+.idea/
 # Default ignored files
 /shelf/
 /workspace.xml
@@ -21,6 +21,7 @@ backend/*.db
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+/_*
 
 # testing
 /coverage
