@@ -2,7 +2,7 @@
 
 import {useState} from "react"
 import {updateTask, deleteTask} from "@/app/lib/api"
-import {ChevronDown, Check, Trash2} from "lucide-react"
+import {ChevronDown, Check, Trash2, Pencil} from "lucide-react"
 import {STATUS_FILTERS, Task, TaskStatus, TaskUpdate} from "@/app/lib/types";
 import {colors} from "@/app/lib/tokens";
 
@@ -19,59 +19,31 @@ function formatDate(ts: string) {
 
 interface TaskCardProps {
     task: Task
-    onUpdated: () => void
-    onDeleted: () => void
+    onEdit: (task: Task) => void
+    onUpdated: (task: Task) => void
+    onDeleted: (id: number) => void
     selectedIds: Set<number>
     onSelect: (id: number | undefined) => void
 
 }
 
-export default function TaskCard({task, onUpdated, onDeleted, selectedIds, onSelect }: TaskCardProps) {
+export default function TaskCard({task, onUpdated, onDeleted, onEdit, selectedIds, onSelect }: TaskCardProps) {
     const[expanded, setExpanded] = useState(false)
     const[hovered, setHovered] = useState(false)
-    const [showStatusMenu, setShowStatusMenu] = useState(false)
     const [currentStatus, setCurrentStatus] = useState(task.status)
 
     const isSelected = selectedIds.has(task.id)
     const isComplete = currentStatus === "completed"
     const currentStatusMeta = STATUS_FILTERS.find(f => f.value === currentStatus)
 
-    async function handleStatusChange(newStatus: TaskStatus) {
-        setShowStatusMenu(false)
-        if (task.id != null) {
-            try {
-                const update: TaskUpdate = {
-                    name: task.name,
-                    description: task.description,
-                    status: newStatus
-                }
-
-                await updateTask(task.id, update)
-                setCurrentStatus(newStatus)
-                console.debug("Status Updated")
-
-            } catch (e) {
-                // console.error("ERROR - Unable to update status")
-                console.error(e)
-
-            }
-        } else {
-            throw Error("Please select a task to update")
-        }
-    }
-
-
-    async function handleDelete() {
-        try {
-            await deleteTask(task.id)
-            onDeleted()
-        } catch {
-            console.error("Failed to delete task")
-        }
+    async function handleStatusChange(newStatus: TaskStatus, task: Task) {
+        task.status = newStatus
+        setCurrentStatus(newStatus)
+        onUpdated(task)
     }
 
     return (
-        <div className="pl-4 cursor-pointer rounded-lg border-1 border-solid py-5 mb-12 border-blue-black relative transition-shadow "
+        <div className="pl-4 cursor-pointer rounded-lg border-1 border-solid py-5 mb-2 border-blue-black relative transition-shadow "
              style={{
                  boxShadow: expanded ? `0 8px 24px ${colors.lavender}25` : `0 1px 4px ${colors.white}`,
                  transform: expanded ? "translateY(-1px)" : "translateY(0)",}
@@ -82,7 +54,7 @@ export default function TaskCard({task, onUpdated, onDeleted, selectedIds, onSel
 
             {/*  Display row  */}
             <div className="flex items-center">
-                <div className="hover:bg-green-300 flex w-5 h-5 shrink rounded-sm transition-colors cursor-pointer "
+                <div className="flex w-5 h-5 shrink rounded-sm transition-colors cursor-pointer "
                      style={{
                          border: isComplete ? "none" : `2px solid ${colors.blueBlack}`,
                          backgroundColor: isComplete ? "none" : "transparent",
@@ -90,54 +62,66 @@ export default function TaskCard({task, onUpdated, onDeleted, selectedIds, onSel
                      onClick={(e) => {
                          e.stopPropagation()  // prevent card click from also firing
                          const newStatus = isComplete ? TaskStatus.OPEN : TaskStatus.COMPLETED
-                         handleStatusChange(newStatus)
+                         handleStatusChange(newStatus, task)
                      }}
                 >
                     {isComplete && <Check size={24} color={colors.green} strokeWidth={3} />}
                 </div>
+
                 <span className="flex pl-4"
                       style={{
                           textDecoration: isComplete ? "line-through" : "none",
                       }}
                 >{task.name}</span>
-                <div className="relative ml-auto">
-                    <button className="btn btn-dropdown "
-                            onClick={(e) =>{
-                                e.stopPropagation()  // prevent card click from also firing
-                                setShowStatusMenu(!showStatusMenu)}}>
-                        {currentStatusMeta?.label}
-                        <ChevronDown size={11} />
-                    </button>
 
-                    {/*Status Dropdown*/}
-                    {showStatusMenu && (
-                        <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-36 overflow-hidden">
-                            {STATUS_FILTERS.filter(f => f.value.toLowerCase() !== "all").map((filter) => (
-                                <button
-                                    key={filter.label}
-                                    className="flex items-center gap-2 w-full px-3 py-2 text-xs text-left transition-colors whitespace-nowrap"
-                                    style={{
-                                        fontWeight: currentStatus === filter.value ? 600 : 400,
-                                        color: currentStatus === filter.value ? filter.color : colors.blueGray,
-                                        background: currentStatus === filter.value ? `${filter.color}18` : "transparent",
-                                    }}
-                                    onClick={(e) =>{
-                                        e.stopPropagation()  // prevent card click from also firing
-                                        handleStatusChange(filter.value as TaskStatus)}}
-                                >
-                                    <span style={{
-                                        width: "7px",
-                                        height: "7px",
-                                        borderRadius: "50%",
-                                        backgroundColor: filter.color,
-                                        flexShrink: 0,
-                                    }} />
-                                    {filter.label}
-                                </button>
-                            ))}
-                        </div>
-                    )}
+                <div className="relative ml-auto mr-4">
+                    <button className="btn btn-primary ml-auto" onClick={(e) => {
+                        e.stopPropagation()
+                        onEdit(task)
+                    }}>
+                        <Pencil size={12} /> Edit
+                    </button>
                 </div>
+                <div
+                    className="relative "
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                        backgroundColor: `${currentStatusMeta?.color}18`,
+                        borderRadius: "999px",
+                        border: `1.5px solid ${currentStatusMeta?.color}40`,
+                    }}
+                >
+                    <select
+                        className="appearance-none pl-6 pr-6 py-1 text-xs font-semibold cursor-pointer bg-transparent outline-none"
+                        style={{ color: currentStatusMeta?.color }}  // colors the selected value display
+                        value={currentStatus}
+                        onChange={(e) => handleStatusChange(e.target.value as TaskStatus, task)}
+                    >
+                        {STATUS_FILTERS.filter(f => f.value !== undefined).map((filter) => (
+                            <option
+                                key={filter.label}
+                                value={filter.value}
+                                style={{ color: colors.blueBlack }}  // force options back to dark neutral
+                            >
+                                {filter.label}
+                            </option>
+                        ))}
+                    </select>
+                    {/* dot on the left */}
+                    <span
+                        className="absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full pointer-events-none"
+                        style={{ backgroundColor: currentStatusMeta?.color }}
+                    />
+
+                    {/* chevron on the right */}
+                    <ChevronDown
+                        size={11}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
+                        style={{ color: currentStatusMeta?.color }}
+                    />
+
+                </div>
+
                 {/* Chevron */}
                 <ChevronDown
                     size={16}
@@ -159,6 +143,8 @@ export default function TaskCard({task, onUpdated, onDeleted, selectedIds, onSel
                 )}
 
             </div>
+
+
 
 
             {/*  Expanded Content  */}
@@ -184,7 +170,7 @@ export default function TaskCard({task, onUpdated, onDeleted, selectedIds, onSel
 
                     {/*  Delete Button  */}
                     <button className="btn border-2 border-red-300 max-w-1/4  text-red  ml-auto hover:bg-red-300"
-                            onClick={(e) => { e.stopPropagation(); handleDelete() }}>
+                            onClick={(e) => { e.stopPropagation(); onDeleted(task.id) }}>
                         <Trash2 size={12} />
                         Delete
                     </button>

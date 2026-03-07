@@ -36,5 +36,6 @@ export async function updateTask(id: number, task: TaskUpdate): Promise<Task> {
 
 export async function deleteTask(id: number): Promise<void> {
     const res = await fetch(API_URL +`/task/${id}`, { method: "DELETE" })
+
     if (!res.ok) throw new Error("Failed to delete task")
 }

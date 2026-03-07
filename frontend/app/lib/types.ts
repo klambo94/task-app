@@ -9,8 +9,8 @@ export const TaskStatus = {
 
 export type TaskStatus = typeof TaskStatus[keyof typeof TaskStatus]
 
-export const STATUS_FILTERS: {label: string; value: TaskStatus | string; color: string}[] = [
-    {label: 'All',         value: "all",                  color: colors.lavender},
+export const STATUS_FILTERS: {label: string; value: TaskStatus | undefined; color: string}[] = [
+    {label: 'All',         value: undefined,                  color: colors.lavender},
     {label: 'Open',        value: TaskStatus.OPEN,        color: colors.pinkPurple},
     {label: 'In Progress', value: TaskStatus.IN_PROGRESS, color: colors.lightPurple},
     {label: 'Completed',   value: TaskStatus.COMPLETED,   color: colors.green}

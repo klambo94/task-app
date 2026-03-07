@@ -77,10 +77,11 @@ async def update_task(task_id: int, task_in: TaskUpdate, session: Session = Depe
         session.refresh(task)
         return task
 
-
-@app.delete("/task/delete/{task_id}")
+@app.delete("/task/{task_id}")
 async def delete_task(task_id: int, session: Session = Depends(get_db)):
-    if task_id is None or 0 <= task_id or task_id > repository.count_of_tasks(session=session):
-        raise HTTPException(status_code=404, detail="Malformed task id !")
-    else:
-        repository.delete_task(task_id=task_id, session=session)
+    print("Deleting task id: {}".format(task_id))
+    task = fetch_task_by_id(task_id=task_id, session=session)
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    return repository.delete_task(task_id=task_id, session=session)
