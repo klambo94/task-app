@@ -2,9 +2,8 @@
 
 import {TaskStatus, TaskUpdate, TaskCreate, Task} from "@/app/lib/types";
 
-const API_URL = process.env.TASK_PUB_API || "http://127.0.0.1:8000"
 
-
+const API_URL = process.env.NEXT_PUBLIC_TASK_API
 
 export async function getTasks(status?: TaskStatus): Promise<Task[]> {
     const url = status != undefined ? API_URL +`/tasks?status=${status}`

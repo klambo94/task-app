@@ -1,0 +1,32 @@
+services:
+  postgres_db:
+    restart: always
+    env_file:
+      - .env.dev
+    volumes:
+      - task_app_postgres_dev:/var/lib/postgresql/18/docker
+    ports:
+      - "5432:5432"  # expose for local DB tools like DBeaver
+
+  backend:
+    env_file:
+      - backend/.env.dev
+    build:
+      target: dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app  # hot reload — mounts local code into container
+
+  frontend:
+    build:
+      target: dev
+    env_file:
+      - frontend/.env.development
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app  # hot reload
+
+volumes:
+  task_app_postgres_dev:
