@@ -3,7 +3,9 @@
 import {TaskStatus, TaskUpdate, TaskCreate, Task} from "@/app/lib/types";
 
 
-const API_URL = process.env.NEXT_PUBLIC_TASK_API
+const API_URL = typeof window === "undefined"
+    ? process.env.TASK_API             // server side
+    : process.env.NEXT_PUBLIC_TASK_API // client side
 
 export async function getTasks(status?: TaskStatus): Promise<Task[]> {
     const url = status != undefined ? API_URL +`/tasks?status=${status}`
