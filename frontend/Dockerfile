@@ -9,12 +9,17 @@ CMD ["npm", "run", "dev"]
 
 
 
-#---prod stage----
-FROM node:lts AS prod
+FROM node:lts AS builder
 WORKDIR /app
 COPY package*.json .
 RUN npm ci
-RUN npm install  --production
 COPY . .
 RUN npm run build
+
+FROM node:lts-alpine AS prod
+WORKDIR /app
+COPY package*.json .
+RUN npm ci --omit=dev
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
 CMD ["npm", "start"]

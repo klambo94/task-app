@@ -11,7 +11,7 @@ services:
     build:
       target: prod
     env_file:
-      - backend/.env.production
+      - backend/.env.prod
     ports:
       - "8000:8000"
 
