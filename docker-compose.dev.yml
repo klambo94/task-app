@@ -4,7 +4,7 @@ services:
     env_file:
       - .env.dev
     volumes:
-      - task_app_postgres_dev:/var/lib/postgresql/18/docker
+      - psinaptic_postgres_dev:/var/lib/postgresql/18/docker
     ports:
       - "5432:5432"  # expose for local DB tools like DBeaver
 
@@ -29,4 +29,4 @@ services:
       - ./frontend:/app  # hot reload
 
 volumes:
-  task_app_postgres_dev:
+  psinaptic_postgres_dev:

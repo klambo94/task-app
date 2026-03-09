@@ -1,20 +1,20 @@
 services:
   postgres_db:
-    container_name: task_app_db
+    container_name: psinaptic_db
     image: postgres:17
     restart: always
 
 
   backend:
     build: ./backend
-    container_name: task_app_backend
+    container_name: psinaptic_backend
     restart: always
     depends_on:
       - postgres_db
 
   frontend:
     build: ./frontend
-    container_name: task_app_frontend
+    container_name: psinaptic_frontend
     restart: always
     depends_on:
       - backend
