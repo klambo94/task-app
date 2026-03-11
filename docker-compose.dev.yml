@@ -6,7 +6,7 @@ services:
     volumes:
       - psinaptic_postgres_dev:/var/lib/postgresql/18/docker
     ports:
-      - "5432:5432"  # expose for local DB tools like DBeaver
+      - "5432:5432"
 
   backend:
     env_file:

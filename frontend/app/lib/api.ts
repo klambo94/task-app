@@ -8,15 +8,15 @@ const API_URL = typeof window === "undefined"
     : process.env.NEXT_PUBLIC_TASK_API // client side
 
 export async function getTasks(status?: TaskStatus): Promise<Task[]> {
-    const url = status != undefined ? API_URL +`/tasks?status=${status}`
-                            : API_URL + '/tasks'
+    const url = status != undefined ? API_URL +`/task?status=${status}`
+                            : API_URL + '/task'
     const res = await fetch(url)
-    if(!res.ok) throw new Error("Failed to fetch tasks")
+    if(!res.ok) throw new Error("Failed to fetch task")
     return res.json()
 }
 
 export async function createTask(task: TaskCreate): Promise<Task> {
-    const res = await fetch(API_URL +`/tasks`, {
+    const res = await fetch(API_URL +`/task`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(task)

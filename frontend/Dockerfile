@@ -3,9 +3,9 @@
 FROM node:lts AS dev
 WORKDIR /app
 COPY package*.json .
-RUN npm install
+RUN npm ci
 COPY . .
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "dev:docker"]
 
 
 
@@ -16,7 +16,7 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM node:lts-alpine AS prod
+FROM node:lts AS prod
 WORKDIR /app
 COPY package*.json .
 RUN npm ci --omit=dev

@@ -1,7 +1,7 @@
-dev:
+build-dev:
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
 
-prod:
+build-prod:
 	docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
 down-dev:
@@ -10,17 +10,22 @@ down-dev:
 down-prod:
 	docker compose -f docker-compose.yml -f docker-compose.prod.yml down
 
-down-dev-nuke:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v
+start-dev:
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml start
 
-down-prod-nuke:
-	docker compose -f docker-compose.yml -f docker-compose.prod.yml down -v
+start-prod:
+	docker compose -f docker-compose.yml -f docker-compose.prod.yml start
+stop-dev:
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml stop
 
-logs:
-	docker compose logs -f
+stop-prod:
+	docker compose -f docker-compose.yml -f docker-compose.prod.yml stop
 
 restart-dev:
 	docker compose down && docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
 
 restart-prod:
 	docker compose down && docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+logs:
+	docker compose logs -f

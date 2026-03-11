@@ -1,6 +1,6 @@
+from datetime import datetime
 from typing import Optional
-
-from models import Status
+from enums import Status
 from pydantic import BaseModel
 
 class TaskCreate(BaseModel):
@@ -18,5 +18,6 @@ class TaskResponse(BaseModel):
     name: str
     description: Optional[str] = None
     status: Status
-
+    created_at: datetime
+    updated_at: datetime
     model_config = {"from_attributes": True}

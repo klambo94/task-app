@@ -1,6 +1,6 @@
 from enums import Status
-from repository import fetch_task_by_id, update_task, delete_task, create_task
-from schemas import TaskCreate, TaskUpdate
+from repositories.task_repository import fetch_task_by_id, update_task, delete_task, create_task
+from schemas.task_schema import TaskCreate, TaskUpdate
 
 
 def test_create_task(db):

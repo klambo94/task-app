@@ -13,9 +13,9 @@ COPY requirements.txt .
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 COPY . .
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--env-file", ".env.dev"]
 
-## -- .env.prod stage --
+## -- .env.local.prod stage --
 FROM python:3.12-slim AS prod
 WORKDIR /app
 
@@ -30,4 +30,4 @@ RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 COPY . .
 ##TODO: change the host and possibly port for mycopsi domain
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000","--env-file", ".env.prod"]

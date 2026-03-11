@@ -5,7 +5,6 @@ from sqlalchemy.orm import sessionmaker
 
 from database import Base
 from main import app, get_db
-from models import Task
 
 TEST_DATABASE_URL = "sqlite:///:memory:"
 TEST_ENGINE = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})

@@ -5,7 +5,7 @@ import {colors} from '@/app/lib/tokens'
 import {Plus, Trash2} from "lucide-react"
 import {useState, useCallback} from 'react'
 import {createTask, deleteTask, getTasks, updateTask} from "@/app/lib/api";
-import {TaskCard} from "@/app/components";
+import TaskCard from "@/app/task/TaskCard";
 
 
 export default function TaskPageClient({initTasks}: { initTasks: Task[]}) {

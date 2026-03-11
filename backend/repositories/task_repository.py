@@ -3,12 +3,12 @@ from typing import Optional
 from fastapi.params import Depends
 from sqlalchemy.orm import Session
 
-from models import Task, Status
+from models.task_model import Task, Status
 from database import SessionLocal
 
 import logging
 
-from schemas import TaskCreate, TaskUpdate
+from schemas.task_schema import TaskCreate, TaskUpdate
 
 log = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ def fetch_all_tasks(session: Session = Depends(SessionLocal), status: Optional[S
     # Todo: implement batch loading  (load first 10, next 10, etc) functionality later..
 
     if status is not None:
-        log.info("Fetching all tasks by status: {status}".format(status=status))
+        log.info("Fetching all task by status: {status}".format(status=status))
         tasks = session.query(Task).filter(Task.status == status).all()
     else:
         tasks = session.query(Task).all()
