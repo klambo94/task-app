@@ -1,8 +1,7 @@
 import json
 
-from helpers import make_user, make_org, make_space
+from helpers import make_user, make_org, make_space, auth
 from schemas import SpaceCreate
-
 
 class TestSpaceRoutes:
 
@@ -10,7 +9,7 @@ class TestSpaceRoutes:
         user = make_user(session)
         org = make_org(session, owner_id=user.id)
         space = SpaceCreate(name="My Space", ownerId=user.id, organizationId=org.id)
-        response = client.post("/api/spaces/", params={"user_id": user.id}, json=space.model_dump(mode="json"))
+        response = client.post("/api/spaces/", headers=auth(user), json=space.model_dump(mode="json"))
         assert response.status_code == 200
         data = response.json()["data"]
         assert data["name"] == "My Space"
@@ -22,7 +21,7 @@ class TestSpaceRoutes:
         org = make_org(session, owner_id=owner.id)
         space = SpaceCreate(name="Hacked Space", ownerId=owner.id,
                             organizationId=org.id)  # ✅ SpaceCreate, not make_space
-        response = client.post("/api/spaces/", params={"user_id": outsider.id}, json=space.model_dump(mode="json"))
+        response = client.post("/api/spaces/", headers=auth(outsider), json=space.model_dump(mode="json"))
         assert response.status_code == 403
 
     def test_get_spaces_by_org(self, client, session):
@@ -32,13 +31,13 @@ class TestSpaceRoutes:
         space1 = SpaceCreate(name="My Space 1", ownerId=user.id, organizationId=org.id)
         space2 = SpaceCreate(name="Space 2", ownerId=user.id, organizationId=org.id)
 
-        response1 = client.post("/api/spaces/", params={"user_id": user.id}, json=space1.model_dump(mode="json"))
-        response2 = client.post("/api/spaces/", params={"user_id": user.id}, json=space2.model_dump(mode="json"))
+        response1 = client.post("/api/spaces/", headers=auth(user), json=space1.model_dump(mode="json"))
+        response2 = client.post("/api/spaces/", headers=auth(user), json=space2.model_dump(mode="json"))
 
         assert response1.status_code == 200
         assert response2.status_code == 200
 
-        allSpaceResp = client.get("/api/spaces/", params={"user_id": user.id, "org_id": org.id})
+        allSpaceResp = client.get("/api/spaces/", headers=auth(user), params={"org_id": org.id})
 
         assert allSpaceResp.status_code == 200
         assert len(allSpaceResp.json()["data"]) == 2
@@ -50,13 +49,13 @@ class TestSpaceRoutes:
         space1 = SpaceCreate(name="My Space 1", ownerId=user.id, organizationId=org.id)
         space2 = SpaceCreate(name="Space 2", ownerId=user.id, organizationId=org.id)
 
-        response1 = client.post("/api/spaces/", params={"user_id": user.id}, json=space1.model_dump(mode="json"))
-        response2 = client.post("/api/spaces/", params={"user_id": user.id}, json=space2.model_dump(mode="json"))
+        response1 = client.post("/api/spaces/", headers=auth(user), json=space1.model_dump(mode="json"))
+        response2 = client.post("/api/spaces/", headers=auth(user), json=space2.model_dump(mode="json"))
 
         assert response1.status_code == 200
         assert response2.status_code == 200
 
-        allSpaceResp = client.get("/api/spaces/", params={"user_id": user.id})
+        allSpaceResp = client.get("/api/spaces/", headers=auth(user))
 
         assert allSpaceResp.status_code == 200
         assert len(allSpaceResp.json()["data"]) == 2
@@ -65,7 +64,7 @@ class TestSpaceRoutes:
         user = make_user(session)
         org = make_org(session, owner_id=user.id)
         space = make_space(session, owner_id=user.id, org_id=org.id)
-        response = client.get(f"/api/spaces/{space.id}", params={"user_id": user.id})
+        response = client.get(f"/api/spaces/{space.id}", headers=auth(user))
         assert response.status_code == 200
         assert response.json()["data"]["id"] == space.id
 
@@ -74,7 +73,7 @@ class TestSpaceRoutes:
         outsider = make_user(session, email="outsider@example.com")
         org = make_org(session, owner_id=owner.id)
         space = make_space(session, owner_id=owner.id, org_id=org.id)
-        response = client.get(f"/api/spaces/{space.id}", params={"user_id": outsider.id})
+        response = client.get(f"/api/spaces/{space.id}", headers=auth(outsider))
         assert response.status_code == 403
 
     def test_update_space(self, client, session):
@@ -83,7 +82,7 @@ class TestSpaceRoutes:
         space = make_space(session, owner_id=user.id, org_id=org.id)
         response = client.patch(
             f"/api/spaces/{space.id}",
-            params={"user_id": user.id},
+            headers=auth(user),
             json={"name": "Renamed Space"}
         )
         assert response.status_code == 200
@@ -93,5 +92,5 @@ class TestSpaceRoutes:
         user = make_user(session, email="delete@example.com")
         org = make_org(session, owner_id=user.id)
         space = make_space(session, owner_id=user.id, org_id=org.id)
-        response = client.delete(f"/api/spaces/{space.id}", params={"user_id": user.id})
+        response = client.delete(f"/api/spaces/{space.id}", headers=auth(user))
         assert response.status_code == 200

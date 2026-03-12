@@ -6,9 +6,10 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-import settings # loads .env
+import settings  # loads .env
 from database import Base, get_db
 import models  # registers all models
+
 
 
 engine = create_engine(DATABASE_URL)
@@ -35,7 +36,7 @@ def session():
 
 
 @pytest.fixture
-def client(session):
+def client(session, monkeypatch):
     def override_get_db():
         yield session
 

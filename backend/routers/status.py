@@ -3,8 +3,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from database import get_db
+from dependencies.auth import get_current_user
 from repositories import status_repository, access_repository
-from schemas import SprintStatusCreate
 from schemas.status_schema import StatusCreate, StatusUpdate, StatusReorder, StatusResponse
 from schemas.shared import DataResponse
 
@@ -13,10 +13,12 @@ router = APIRouter(prefix="/api", tags=["status"])
 
 
 @router.get("/spaces/{space_id}/status", response_model=DataResponse[list[StatusResponse]])
-def get_statuses(space_id: str,
-                 user_id: str,# Temp, once auth is hooked up use:  current_user = Depends(current_user)
-                 session: Session = Depends(get_db)):
-    if not access_repository.can_access_space(user_id, space_id, session):
+def get_statuses(
+    space_id: str,
+    current_user=Depends(get_current_user),
+    session: Session = Depends(get_db)
+):
+    if not access_repository.can_access_space(current_user.id, space_id, session):
         raise HTTPException(status_code=403, detail="Access denied")
 
     statuses = status_repository.get_by_space(space_id, session)
@@ -27,10 +29,10 @@ def get_statuses(space_id: str,
 def create_status(
     space_id: str,
     status_in: StatusCreate,
-    user_id: str, # Temp, once auth is hooked up use:  current_user = Depends(current_user)
+    current_user=Depends(get_current_user),
     session: Session = Depends(get_db)
 ):
-    if not access_repository.can_admin_space(user_id, space_id, session):
+    if not access_repository.can_admin_space(current_user.id, space_id, session):
         raise HTTPException(status_code=403, detail="Admin access required")
 
     status_in = StatusCreate(**status_in.model_dump(exclude={"spaceId"}), spaceId=space_id)
@@ -42,10 +44,10 @@ def create_status(
 def reorder_statuses(
     space_id: str,
     reorders: list[StatusReorder],
-    user_id: str,# Temp, once auth is hooked up use:  current_user = Depends(current_user)
+    current_user=Depends(get_current_user),
     session: Session = Depends(get_db)
 ):
-    if not access_repository.can_admin_space(user_id, space_id, session):
+    if not access_repository.can_admin_space(current_user.id, space_id, session):
         raise HTTPException(status_code=403, detail="Admin access required")
 
     status_repository.reorder(reorders, session)
@@ -56,6 +58,7 @@ def reorder_statuses(
 def update_status(
     status_id: str,
     status_in: StatusUpdate,
+    current_user=Depends(get_current_user),
     session: Session = Depends(get_db)
 ):
     status = status_repository.update(status_id, status_in, session)
@@ -65,7 +68,11 @@ def update_status(
 
 
 @router.delete("/status/{status_id}")
-def delete_status(status_id: str, session: Session = Depends(get_db)):
+def delete_status(
+    status_id: str,
+    current_user=Depends(get_current_user),
+    session: Session = Depends(get_db)
+):
     success = status_repository.delete(status_id, session)
     if not success:
         raise HTTPException(status_code=404, detail="Status not found")

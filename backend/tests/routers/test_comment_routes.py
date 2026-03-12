@@ -1,4 +1,4 @@
-from helpers import make_user, make_org, make_space, make_thread
+from helpers import make_user, make_org, make_space, make_thread, auth
 
 
 class TestCommentRoutes:
@@ -10,7 +10,7 @@ class TestCommentRoutes:
         thread = make_thread(session, space=space)
         response = client.post(
             "/api/comments",
-            params={"user_id": user.id},
+            headers=auth(user),
             json={"content": "Hello!", "threadId": thread.id, "authorId": user.id}
         )
         assert response.status_code == 200
@@ -26,7 +26,7 @@ class TestCommentRoutes:
         thread = make_thread(session, space=space)
         response = client.post(
             "/api/comments",
-            params={"user_id": outsider.id},
+            headers=auth(outsider),
             json={"content": "Hacked!", "threadId": thread.id, "authorId": outsider.id}
         )
         assert response.status_code == 403
@@ -36,9 +36,9 @@ class TestCommentRoutes:
         org = make_org(session, owner_id=user.id)
         space = make_space(session, owner_id=user.id, org_id=org.id)
         thread = make_thread(session, space=space)
-        client.post("/api/comments", params={"user_id": user.id}, json={"content": "First", "threadId": thread.id, "authorId": user.id})
-        client.post("/api/comments", params={"user_id": user.id}, json={"content": "Second", "threadId": thread.id, "authorId": user.id})
-        response = client.get(f"/api/threads/{thread.id}/comments", params={"user_id": user.id})
+        client.post("/api/comments", headers=auth(user), json={"content": "First", "threadId": thread.id, "authorId": user.id})
+        client.post("/api/comments", headers=auth(user), json={"content": "Second", "threadId": thread.id, "authorId": user.id})
+        response = client.get(f"/api/threads/{thread.id}/comments", headers=auth(user))
         assert response.status_code == 200
         assert len(response.json()["data"]) == 2
 
@@ -49,13 +49,13 @@ class TestCommentRoutes:
         thread = make_thread(session, space=space)
         create_resp = client.post(
             "/api/comments",
-            params={"user_id": user.id},
+            headers=auth(user),
             json={"content": "Original", "threadId": thread.id, "authorId": user.id}
         )
         comment_id = create_resp.json()["data"]["id"]
         response = client.patch(
             f"/api/comments/{comment_id}",
-            params={"user_id": user.id},
+            headers=auth(user),
             json={"content": "Edited"}
         )
         assert response.status_code == 200
@@ -69,13 +69,13 @@ class TestCommentRoutes:
         thread = make_thread(session, space=space)
         create_resp = client.post(
             "/api/comments",
-            params={"user_id": owner.id},
+            headers=auth(owner),
             json={"content": "Original", "threadId": thread.id, "authorId": owner.id}
         )
         comment_id = create_resp.json()["data"]["id"]
         response = client.patch(
             f"/api/comments/{comment_id}",
-            params={"user_id": other.id},
+            headers=auth(other),
             json={"content": "Hacked"}
         )
         assert response.status_code == 403
@@ -87,9 +87,9 @@ class TestCommentRoutes:
         thread = make_thread(session, space=space)
         create_resp = client.post(
             "/api/comments",
-            params={"user_id": user.id},
+            headers=auth(user),
             json={"content": "Bye!", "threadId": thread.id, "authorId": user.id}
         )
         comment_id = create_resp.json()["data"]["id"]
-        response = client.delete(f"/api/comments/{comment_id}", params={"user_id": user.id})
+        response = client.delete(f"/api/comments/{comment_id}", headers=auth(user))
         assert response.status_code == 200

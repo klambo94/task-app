@@ -1,33 +1,35 @@
-from helpers import make_user
+from helpers import make_user, auth
+from settings import INTERNAL_SECRET
 
 
 class TestUserRoutes:
 
     def test_get_me(self, client, session):
         user = make_user(session)
-        response = client.get("/api/users/me", params={"user_id": user.id})
+        response = client.get("/api/users/me", headers=auth(user))
         assert response.status_code == 200
         assert response.json()["data"]["id"] == user.id
 
     def test_get_me_not_found(self, client, session):
-        response = client.get("/api/users/me", params={"user_id": "nonexistent-id"})
+        response = client.get("/api/users/me", headers={"x-internal-secret": INTERNAL_SECRET, "x-user-id": "nonexistent-id"})
         assert response.status_code == 404
 
     def test_get_user_by_id(self, client, session):
         user = make_user(session)
-        response = client.get(f"/api/users/{user.id}")
+        response = client.get(f"/api/users/{user.id}", headers=auth(user))
         assert response.status_code == 200
         assert response.json()["data"]["email"] == user.email
 
     def test_get_user_not_found(self, client, session):
-        response = client.get("/api/users/nonexistent-id")
+        user = make_user(session)
+        response = client.get("/api/users/nonexistent-id", headers=auth(user))
         assert response.status_code == 404
 
     def test_update_me(self, client, session):
         user = make_user(session)
         response = client.patch(
             "/api/users/me",
-            params={"user_id": user.id},
+            headers=auth(user),
             json={"name": "Updated Name"}
         )
         assert response.status_code == 200
@@ -35,6 +37,6 @@ class TestUserRoutes:
 
     def test_delete_me(self, client, session):
         user = make_user(session, email="test@example.com")
-        response = client.delete("/api/users/me", params={"user_id": user.id})
+        response = client.delete("/api/users/me", headers=auth(user))
         assert response.status_code == 200
         assert response.json()["message"] == "User deleted"

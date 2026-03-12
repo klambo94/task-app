@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from database import get_db
+from dependencies.auth import get_current_user
 from repositories import thread_repository, access_repository
 from schemas.thread_schema import (
     ThreadCreate, ThreadUpdate, ThreadFilter,
@@ -14,12 +15,13 @@ from enums import ThreadPriority
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["threads"])
 
+
 # Threads -----------------------------------------------------------------------------
 
 @router.get("/spaces/{space_id}/threads", response_model=DataResponse[list[ThreadResponse]])
 def get_threads(
     space_id: str,
-    user_id: str, # Temp, once auth is hooked up use:  current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     sprint_id: str | None = None,
     status_id: str | None = None,
     priority: ThreadPriority | None = None,
@@ -28,7 +30,7 @@ def get_threads(
     parent_id: str | None = None,
     session: Session = Depends(get_db)
 ):
-    if not access_repository.can_access_space(user_id, space_id, session):
+    if not access_repository.can_access_space(current_user.id, space_id, session):
         raise HTTPException(status_code=403, detail="Access denied")
 
     filters = ThreadFilter(
@@ -46,10 +48,10 @@ def get_threads(
 @router.post("/threads", response_model=DataResponse[ThreadResponse])
 def create_thread(
     thread_in: ThreadCreate,
-    user_id: str, # Temp, once auth is hooked up use:  current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     session: Session = Depends(get_db)
 ):
-    if not access_repository.can_access_space(user_id, thread_in.spaceId, session):
+    if not access_repository.can_access_space(current_user.id, thread_in.spaceId, session):
         raise HTTPException(status_code=403, detail="Access denied")
 
     thread_in = ThreadCreate(
@@ -60,7 +62,7 @@ def create_thread(
         priority=thread_in.priority,
         sprintId=thread_in.sprintId,
         parentId=thread_in.parentId,
-        reporterId=user_id,
+        reporterId=current_user.id,
         reviewerId=thread_in.reviewerId,
         dueDate=thread_in.dueDate,
     )
@@ -69,10 +71,12 @@ def create_thread(
 
 
 @router.get("/threads/{thread_id}", response_model=DataResponse[ThreadDetailResponse])
-def get_thread(thread_id: str,
-               user_id: str,# Temp, once auth is hooked up use:  current_user = Depends(get_current_user)
-               session: Session = Depends(get_db)):
-    if not access_repository.can_access_thread(user_id, thread_id, session):
+def get_thread(
+    thread_id: str,
+    current_user=Depends(get_current_user),
+    session: Session = Depends(get_db)
+):
+    if not access_repository.can_access_thread(current_user.id, thread_id, session):
         raise HTTPException(status_code=403, detail="Access denied")
 
     thread = thread_repository.get_by_id(thread_id, session)
@@ -82,10 +86,12 @@ def get_thread(thread_id: str,
 
 
 @router.get("/threads/{thread_id}/subtasks", response_model=DataResponse[list[ThreadResponse]])
-def get_subtasks(thread_id: str,
-                 user_id: str, # Temp, once auth is hooked up use:  current_user = Depends(get_current_user)
-                 session: Session = Depends(get_db)):
-    if not access_repository.can_access_thread(user_id, thread_id, session):
+def get_subtasks(
+    thread_id: str,
+    current_user=Depends(get_current_user),
+    session: Session = Depends(get_db)
+):
+    if not access_repository.can_access_thread(current_user.id, thread_id, session):
         raise HTTPException(status_code=403, detail="Access denied")
 
     subtasks = thread_repository.get_subtasks(thread_id, session)
@@ -96,10 +102,10 @@ def get_subtasks(thread_id: str,
 def update_thread(
     thread_id: str,
     thread_in: ThreadUpdate,
-    user_id: str, # Temp, once auth is hooked up use:  current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     session: Session = Depends(get_db)
 ):
-    if not access_repository.can_access_thread(user_id, thread_id, session):
+    if not access_repository.can_access_thread(current_user.id, thread_id, session):
         raise HTTPException(status_code=403, detail="Access denied")
 
     thread = thread_repository.update(thread_id, thread_in, session)
@@ -109,10 +115,12 @@ def update_thread(
 
 
 @router.delete("/threads/{thread_id}")
-def delete_thread(thread_id: str,
-                  user_id: str, # Temp, once auth is hooked up use:  current_user = Depends(get_current_user)
-                  session: Session = Depends(get_db)):
-    if not access_repository.can_delete_thread(user_id, thread_id, session):
+def delete_thread(
+    thread_id: str,
+    current_user=Depends(get_current_user),
+    session: Session = Depends(get_db)
+):
+    if not access_repository.can_delete_thread(current_user.id, thread_id, session):
         raise HTTPException(status_code=403, detail="Access denied")
 
     success = thread_repository.delete(thread_id, session)
@@ -126,11 +134,11 @@ def delete_thread(thread_id: str,
 @router.post("/threads/{thread_id}/assign")
 def assign_user(
     thread_id: str,
-    user_id: str, # Temp, once auth is hooked up use:  current_user = Depends(get_current_user),
     payload: AssignUserRequest,
+    current_user=Depends(get_current_user),
     session: Session = Depends(get_db)
 ):
-    if not access_repository.can_access_thread(user_id, thread_id, session):
+    if not access_repository.can_access_thread(current_user.id, thread_id, session):
         raise HTTPException(status_code=403, detail="Access denied")
 
     thread_repository.assign_user(thread_id, payload.userId, session)
@@ -141,10 +149,10 @@ def assign_user(
 def unassign_user(
     thread_id: str,
     assignee_id: str,
-    user_id: str, # Temp, once auth is hooked up use:  current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     session: Session = Depends(get_db)
 ):
-    if not access_repository.can_access_thread(user_id, thread_id, session):
+    if not access_repository.can_access_thread(current_user.id, thread_id, session):
         raise HTTPException(status_code=403, detail="Access denied")
 
     success = thread_repository.unassign_user(thread_id, assignee_id, session)
@@ -158,11 +166,11 @@ def unassign_user(
 @router.post("/threads/{thread_id}/labels")
 def add_label(
     thread_id: str,
-    user_id: str, # Temp, once auth is hooked up use:  current_user = Depends(get_current_user),
     payload: AddLabelRequest,
+    current_user=Depends(get_current_user),
     session: Session = Depends(get_db)
 ):
-    if not access_repository.can_access_thread(user_id, thread_id, session):
+    if not access_repository.can_access_thread(current_user.id, thread_id, session):
         raise HTTPException(status_code=403, detail="Access denied")
 
     thread_repository.add_label(thread_id, payload.labelId, session)
@@ -173,10 +181,10 @@ def add_label(
 def remove_label(
     thread_id: str,
     label_id: str,
-    user_id: str, # Temp, once auth is hooked up use:  current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     session: Session = Depends(get_db)
 ):
-    if not access_repository.can_access_thread(user_id, thread_id, session):
+    if not access_repository.can_access_thread(current_user.id, thread_id, session):
         raise HTTPException(status_code=403, detail="Access denied")
 
     success = thread_repository.remove_label(thread_id, label_id, session)
@@ -186,14 +194,15 @@ def remove_label(
 
 
 # Move  -----------------------------------------------------------------------------
+
 @router.patch("/threads/{thread_id}/move-sprint")
 def move_to_sprint(
     thread_id: str,
-    user_id: str, # Temp, once auth is hooked up use:  current_user = Depends(get_current_user),
     payload: MoveSprintRequest,
+    current_user=Depends(get_current_user),
     session: Session = Depends(get_db)
 ):
-    if not access_repository.can_access_thread(user_id, thread_id, session):
+    if not access_repository.can_access_thread(current_user.id, thread_id, session):
         raise HTTPException(status_code=403, detail="Access denied")
 
     thread = thread_repository.move_to_sprint(thread_id, payload.sprintId, session)
@@ -205,14 +214,14 @@ def move_to_sprint(
 @router.patch("/threads/{thread_id}/move-space")
 def move_to_space(
     thread_id: str,
-    user_id: str, # Temp, once auth is hooked up use:  current_user = Depends(get_current_user),
     payload: MoveSpaceRequest,
+    current_user=Depends(get_current_user),
     session: Session = Depends(get_db)
 ):
-    if not access_repository.can_access_thread(user_id, thread_id, session):
+    if not access_repository.can_access_thread(current_user.id, thread_id, session):
         raise HTTPException(status_code=403, detail="Access denied")
 
-    if not access_repository.can_access_space(user_id, payload.spaceId, session):
+    if not access_repository.can_access_space(current_user.id, payload.spaceId, session):
         raise HTTPException(status_code=403, detail="Access denied to target space")
 
     thread = thread_repository.move_to_space(thread_id, payload.spaceId, session)

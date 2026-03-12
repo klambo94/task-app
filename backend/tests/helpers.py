@@ -3,7 +3,11 @@ from sqlalchemy.orm import Session
 from enums import SpaceVisibility, ThreadPriority
 from schemas import OrganizationCreate, SpaceCreate, SprintCreate, ThreadCreate, LabelCreate
 from repositories import organization_repository, space_repository, sprint_repository, thread_repository, label_repository
+from settings import INTERNAL_SECRET
 
+
+def auth(user) -> dict:
+    return {"x-internal-secret": INTERNAL_SECRET, "x-user-id": user.id}
 
 def make_user(session, email="test@example.com", name="Test User"):
     from models.auth_models import User

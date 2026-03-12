@@ -1,4 +1,4 @@
-from helpers import make_user, make_org, make_space, make_label
+from helpers import make_user, make_org, make_space, make_label, auth
 
 
 class TestLabelRoutes:
@@ -9,7 +9,7 @@ class TestLabelRoutes:
         space = make_space(session, owner_id=user.id, org_id=org.id)
         response = client.post(
             "/api/labels",
-            params={"user_id": user.id},
+            headers=auth(user),
             json={"name": "Bug", "spaceId": space.id, "color": "#ff0000"}
         )
         assert response.status_code == 200
@@ -24,7 +24,7 @@ class TestLabelRoutes:
         space = make_space(session, owner_id=owner.id, org_id=org.id)
         response = client.post(
             "/api/labels",
-            params={"user_id": outsider.id},
+            headers=auth(outsider),
             json={"name": "Hacked", "spaceId": space.id, "color": "#000000"}
         )
         assert response.status_code == 403
@@ -35,7 +35,7 @@ class TestLabelRoutes:
         space = make_space(session, owner_id=user.id, org_id=org.id)
         make_label(session, space_id=space.id, name="Label 1")
         make_label(session, space_id=space.id, name="Label 2")
-        response = client.get(f"/api/spaces/{space.id}/labels", params={"user_id": user.id})
+        response = client.get(f"/api/spaces/{space.id}/labels", headers=auth(user))
         assert response.status_code == 200
         assert len(response.json()["data"]) == 2
 
@@ -43,7 +43,7 @@ class TestLabelRoutes:
         user = make_user(session)
         org = make_org(session, owner_id=user.id)
         space = make_space(session, owner_id=user.id, org_id=org.id)
-        response = client.get(f"/api/spaces/{space.id}/labels", params={"user_id": user.id})
+        response = client.get(f"/api/spaces/{space.id}/labels", headers=auth(user))
         assert response.status_code == 200
         assert response.json()["data"] == []
 
@@ -52,7 +52,7 @@ class TestLabelRoutes:
         outsider = make_user(session, email="outsider@example.com")
         org = make_org(session, owner_id=owner.id)
         space = make_space(session, owner_id=owner.id, org_id=org.id)
-        response = client.get(f"/api/spaces/{space.id}/labels", params={"user_id": outsider.id})
+        response = client.get(f"/api/spaces/{space.id}/labels", headers=auth(outsider))
         assert response.status_code == 403
 
     def test_update_label(self, client, session):
@@ -62,7 +62,7 @@ class TestLabelRoutes:
         label = make_label(session, space_id=space.id)
         response = client.patch(
             f"/api/labels/{label.id}",
-            params={"user_id": user.id},
+            headers=auth(user),
             json={"name": "Renamed"}
         )
         assert response.status_code == 200
@@ -72,7 +72,7 @@ class TestLabelRoutes:
         user = make_user(session)
         response = client.patch(
             "/api/labels/nonexistent-id",
-            params={"user_id": user.id},
+            headers=auth(user),
             json={"name": "Ghost"}
         )
         assert response.status_code == 404
@@ -82,10 +82,12 @@ class TestLabelRoutes:
         org = make_org(session, owner_id=user.id)
         space = make_space(session, owner_id=user.id, org_id=org.id)
         label = make_label(session, space_id=space.id)
-        response = client.delete(f"/api/labels/{label.id}", params={"user_id": user.id})
+        response = client.delete(f"/api/labels/{label.id}", headers=auth(user), params={"space_id" : space.id})
         assert response.status_code == 200
 
     def test_delete_label_not_found(self, client, session):
         user = make_user(session)
-        response = client.delete("/api/labels/nonexistent-id", params={"user_id": user.id})
+        org = make_org(session, owner_id=user.id)
+        space = make_space(session, owner_id=user.id, org_id=org.id)
+        response = client.delete("/api/labels/nonexistent-id", headers=auth(user), params={"space_id" : space.id})
         assert response.status_code == 404

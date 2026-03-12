@@ -72,15 +72,15 @@ class TestOrganizationMemberRepository:
         result = organization_repository.add_member_to_org(org.id, member.id, session=session)
         assert result is not None
         assert result.userId == member.id
-        assert result.role == OrgRole.member
+        assert result.role == OrgRole.MEMBER
 
     def test_add_member_with_role(self, session):
         owner = make_user(session, email="owner2@example.com")
         admin = make_user(session, email="admin@example.com")
         org = make_org(session, owner_id=owner.id)
 
-        result = organization_repository.add_member_to_org(org.id, admin.id, role=OrgRole.admin, session=session)
-        assert result.role == OrgRole.admin
+        result = organization_repository.add_member_to_org(org.id, admin.id, role=OrgRole.ADMIN, session=session)
+        assert result.role == OrgRole.ADMIN
 
     def test_get_members(self, session):
         owner = make_user(session, email="owner3@example.com")
@@ -92,7 +92,7 @@ class TestOrganizationMemberRepository:
         organization_repository.add_member_to_org(org.id, user2.id, session=session)
 
         members = organization_repository.get_members(org.id, session)
-        assert len(members) == 2
+        assert len(members) == 3
 
     def test_update_member_role(self, session):
         owner = make_user(session, email="owner4@example.com")
@@ -100,15 +100,15 @@ class TestOrganizationMemberRepository:
         org = make_org(session, owner_id=owner.id)
 
         organization_repository.add_member_to_org(org.id, user.id, session=session)
-        result = organization_repository.update_member_role(org.id, user.id, OrgRole.admin, session)
+        result = organization_repository.update_member_role(org.id, user.id, OrgRole.ADMIN, session)
 
-        assert result.role == OrgRole.admin
+        assert result.role == OrgRole.ADMIN
 
     def test_update_member_role_not_found(self, session):
         owner = make_user(session, email="owner5@example.com")
         org = make_org(session, owner_id=owner.id)
 
-        result = organization_repository.update_member_role(org.id, "ghost-id", OrgRole.admin, session)
+        result = organization_repository.update_member_role(org.id, "ghost-id", OrgRole.ADMIN, session)
         assert result is None
 
     def test_remove_member(self, session):

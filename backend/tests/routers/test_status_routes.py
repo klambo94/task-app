@@ -1,8 +1,7 @@
-from helpers import make_user, make_org, make_space
+from helpers import make_user, make_org, make_space, auth
 from repositories import status_repository
 from schemas.status_schema import StatusCreate
 from enums import StatusCategory
-
 
 class TestStatusRoutes:
 
@@ -10,7 +9,7 @@ class TestStatusRoutes:
         user = make_user(session)
         org = make_org(session, owner_id=user.id)
         space = make_space(session, owner_id=user.id, org_id=org.id)
-        response = client.get(f"/api/spaces/{space.id}/status", params={"user_id": user.id})
+        response = client.get(f"/api/spaces/{space.id}/status", headers=auth(user))
         assert response.status_code == 200
         assert len(response.json()["data"]) > 0  # seeded on space creation
 
@@ -19,7 +18,7 @@ class TestStatusRoutes:
         outsider = make_user(session, email="outsider@example.com")
         org = make_org(session, owner_id=owner.id)
         space = make_space(session, owner_id=owner.id, org_id=org.id)
-        response = client.get(f"/api/spaces/{space.id}/status", params={"user_id": outsider.id})
+        response = client.get(f"/api/spaces/{space.id}/status", headers=auth(outsider))
         assert response.status_code == 403
 
     def test_create_status(self, client, session):
@@ -28,7 +27,7 @@ class TestStatusRoutes:
         space = make_space(session, owner_id=user.id, org_id=org.id)
         response = client.post(
             f"/api/spaces/{space.id}/status",
-            params={"user_id": user.id},
+            headers=auth(user),
             json={
                 "name": "Custom",
                 "spaceId": space.id,
@@ -52,7 +51,7 @@ class TestStatusRoutes:
         space = make_space(session, owner_id=owner.id, org_id=org.id)
         response = client.post(
             f"/api/spaces/{space.id}/status",
-            params={"user_id": member.id},
+            headers=auth(member),
             json={"name": "Hacked", "spaceId": space.id, "category": StatusCategory.STARTED.value, "color": "#000", "order": 99}
         )
         assert response.status_code == 403
@@ -65,7 +64,7 @@ class TestStatusRoutes:
         status = status[0]
         response = client.patch(
             f"/api/status/{status.id}",
-            params={"user_id": user.id},
+            headers=auth(user),
             json={"name": "Renamed"}
         )
         assert response.status_code == 200
@@ -75,7 +74,7 @@ class TestStatusRoutes:
         user = make_user(session)
         response = client.patch(
             "/api/status/nonexistent-id",
-            params={"user_id": user.id},
+            headers=auth(user),
             json={"name": "Ghost"}
         )
         assert response.status_code == 404
@@ -88,7 +87,7 @@ class TestStatusRoutes:
         reorders = [{"id": s.id, "order": i * 10} for i, s in enumerate(status)]
         response = client.post(
             f"/api/spaces/{space.id}/status/reorder",
-            params={"user_id": user.id},
+            headers=auth(user),
             json=reorders
         )
         assert response.status_code == 200
@@ -105,10 +104,10 @@ class TestStatusRoutes:
             order=99
         )
         status = status_repository.create(status_in, session)
-        response = client.delete(f"/api/status/{status.id}", params={"user_id": user.id})
+        response = client.delete(f"/api/status/{status.id}", headers=auth(user))
         assert response.status_code == 200
 
     def test_delete_status_not_found(self, client, session):
         user = make_user(session)
-        response = client.delete("/api/status/nonexistent-id", params={"user_id": user.id})
+        response = client.delete("/api/status/nonexistent-id", headers=auth(user))
         assert response.status_code == 404

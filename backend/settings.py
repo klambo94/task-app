@@ -22,3 +22,5 @@ POSTGRES_DB : str = os.getenv("POSTGRES_DB","psinaptic_db")
 
 DATABASE_URL = f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_SERVER}:{POSTGRES_PORT}/{POSTGRES_DB}"
 FRONT_END_URL : str = os.getenv("FRONT_END_URL","http://localhost:3000")
+
+INTERNAL_SECRET = os.getenv("INTERNAL_API_SECRET")

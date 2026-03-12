@@ -1,4 +1,4 @@
-from helpers import make_user, make_org, make_space, make_sprint, make_thread, make_label
+from helpers import make_user, make_org, make_space, make_sprint, make_thread, make_label, auth
 from enums import ThreadPriority
 
 
@@ -11,7 +11,7 @@ class TestThreadRoutes:
         default_status = next(s for s in space.statuses if s.isDefault)
         response = client.post(
             "/api/threads",
-            params={"user_id": user.id},
+            headers=auth(user),
             json={"title": "My Thread", "spaceId": space.id, "statusId": default_status.id}
         )
         assert response.status_code == 200
@@ -27,7 +27,7 @@ class TestThreadRoutes:
         default_status = next(s for s in space.statuses if s.isDefault)
         response = client.post(
             "/api/threads",
-            params={"user_id": outsider.id},
+            headers=auth(outsider),
             json={"title": "Hacked", "spaceId": space.id, "statusId": default_status.id}
         )
         assert response.status_code == 403
@@ -38,7 +38,7 @@ class TestThreadRoutes:
         space = make_space(session, owner_id=user.id, org_id=org.id)
         make_thread(session, space=space, title="Thread 1")
         make_thread(session, space=space, title="Thread 2")
-        response = client.get(f"/api/spaces/{space.id}/threads", params={"user_id": user.id})
+        response = client.get(f"/api/spaces/{space.id}/threads", headers=auth(user))
         assert response.status_code == 200
         assert len(response.json()["data"]) == 2
 
@@ -50,7 +50,7 @@ class TestThreadRoutes:
         make_thread(session, space=space, title="Low", priority=ThreadPriority.LOW)
         response = client.get(
             f"/api/spaces/{space.id}/threads",
-            params={"user_id": user.id, "priority": ThreadPriority.URGENT.value}
+            headers=auth(user), params={"priority": ThreadPriority.URGENT.value}
         )
         assert response.status_code == 200
         assert len(response.json()["data"]) == 1
@@ -61,7 +61,7 @@ class TestThreadRoutes:
         org = make_org(session, owner_id=user.id)
         space = make_space(session, owner_id=user.id, org_id=org.id)
         thread = make_thread(session, space=space)
-        response = client.get(f"/api/threads/{thread.id}", params={"user_id": user.id})
+        response = client.get(f"/api/threads/{thread.id}", headers=auth(user))
         assert response.status_code == 200
         assert response.json()["data"]["id"] == thread.id
 
@@ -72,7 +72,7 @@ class TestThreadRoutes:
         parent = make_thread(session, space=space, title="Parent")
         make_thread(session, space=space, title="Sub 1", parent_id=parent.id)
         make_thread(session, space=space, title="Sub 2", parent_id=parent.id)
-        response = client.get(f"/api/threads/{parent.id}/subtasks", params={"user_id": user.id})
+        response = client.get(f"/api/threads/{parent.id}/subtasks", headers=auth(user))
         assert response.status_code == 200
         assert len(response.json()["data"]) == 2
 
@@ -83,7 +83,7 @@ class TestThreadRoutes:
         thread = make_thread(session, space=space)
         response = client.patch(
             f"/api/threads/{thread.id}",
-            params={"user_id": user.id},
+            headers=auth(user),
             json={"title": "Updated"}
         )
         assert response.status_code == 200
@@ -94,7 +94,7 @@ class TestThreadRoutes:
         org = make_org(session, owner_id=user.id)
         space = make_space(session, owner_id=user.id, org_id=org.id)
         thread = make_thread(session, space=space, reporter_id=user.id)
-        response = client.delete(f"/api/threads/{thread.id}", params={"user_id": user.id})
+        response = client.delete(f"/api/threads/{thread.id}", headers=auth(user))
         assert response.status_code == 200
 
     def test_assign_user(self, client, session):
@@ -104,7 +104,7 @@ class TestThreadRoutes:
         thread = make_thread(session, space=space)
         response = client.post(
             f"/api/threads/{thread.id}/assign",
-            params={"user_id": user.id},
+            headers=auth(user),
             json={"userId": user.id}
         )
         assert response.status_code == 200
@@ -114,8 +114,8 @@ class TestThreadRoutes:
         org = make_org(session, owner_id=user.id)
         space = make_space(session, owner_id=user.id, org_id=org.id)
         thread = make_thread(session, space=space)
-        client.post(f"/api/threads/{thread.id}/assign", params={"user_id": user.id}, json={"userId": user.id})
-        response = client.delete(f"/api/threads/{thread.id}/assign/{user.id}", params={"user_id": user.id})
+        client.post(f"/api/threads/{thread.id}/assign", headers=auth(user), json={"userId": user.id})
+        response = client.delete(f"/api/threads/{thread.id}/assign/{user.id}", headers=auth(user))
         assert response.status_code == 200
 
     def test_add_label(self, client, session):
@@ -126,7 +126,7 @@ class TestThreadRoutes:
         label = make_label(session, space_id=space.id)
         response = client.post(
             f"/api/threads/{thread.id}/labels",
-            params={"user_id": user.id},
+            headers=auth(user),
             json={"labelId": label.id}
         )
         assert response.status_code == 200
@@ -137,8 +137,8 @@ class TestThreadRoutes:
         space = make_space(session, owner_id=user.id, org_id=org.id)
         thread = make_thread(session, space=space)
         label = make_label(session, space_id=space.id)
-        client.post(f"/api/threads/{thread.id}/labels", params={"user_id": user.id}, json={"labelId": label.id})
-        response = client.delete(f"/api/threads/{thread.id}/labels/{label.id}", params={"user_id": user.id})
+        client.post(f"/api/threads/{thread.id}/labels", headers=auth(user), json={"labelId": label.id})
+        response = client.delete(f"/api/threads/{thread.id}/labels/{label.id}", headers=auth(user))
         assert response.status_code == 200
 
     def test_move_to_sprint(self, client, session):
@@ -149,7 +149,7 @@ class TestThreadRoutes:
         thread = make_thread(session, space=space)
         response = client.patch(
             f"/api/threads/{thread.id}/move-sprint",
-            params={"user_id": user.id},
+            headers=auth(user),
             json={"sprintId": sprint.id}
         )
         assert response.status_code == 200
@@ -162,7 +162,7 @@ class TestThreadRoutes:
         thread = make_thread(session, space=space1)
         response = client.patch(
             f"/api/threads/{thread.id}/move-space",
-            params={"user_id": user.id},
+            headers=auth(user),
             json={"spaceId": space2.id}
         )
         assert response.status_code == 200
