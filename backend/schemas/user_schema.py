@@ -1,20 +1,23 @@
+from pydantic import BaseModel, EmailStr
 from datetime import datetime
-from pydantic import EmailStr, BaseModel
+from typing import Optional
 
 
-class UserCreate(BaseModel):
-    username: str
+class UserBase(BaseModel):
+    name: Optional[str] = None
     email: EmailStr
-    created_at: datetime
+    image: Optional[str] = None
 
-class UserResponse(BaseModel):
-    id: str           # Auth.js uses string UUIDs
-    name: str | None
-    email: str
-    image: str | None
-    created_at: datetime
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    image: Optional[str] = None
+
+
+class UserResponse(UserBase):
+    id: str
+    emailVerified: Optional[datetime] = None
+    createdAt: datetime
+    updatedAt: datetime
+
     model_config = {"from_attributes": True}
-
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"

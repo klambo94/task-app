@@ -12,7 +12,7 @@ export default function Page() {
             {/* Noise grain overlay */}
             <div className="grain" aria-hidden="true"/>
 
-              {/* Nav */}
+            {/* Nav */}
             <nav className="nav">
                 <span className="logo">Psinaptic</span>
                 <Link href="/auth/login" className="nav-login">Sign in</Link>

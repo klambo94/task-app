@@ -21,8 +21,19 @@ export const { handlers, signIn, signOut, auth} = NextAuth({
             session.user.id = user.id
             return session
         }
+    },events: {
+        async createUser({ user }) {
+            // fires only on first login (registration)
+            // good place to create a default board
+            await fetch(`${process.env.TASK_API}/api/boards/init`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user_id: user.id })
+            })
+        }
     },
     pages: {
         signIn: "/auth/login",  // redirect to our custom login page
+        signOut: "/"
     }
 })

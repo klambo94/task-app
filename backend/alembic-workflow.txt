@@ -1,0 +1,8 @@
+# generate migration from model changes
+alembic revision --autogenerate -m "initial schema"
+
+# apply
+alembic upgrade head
+
+# rollback one
+alembic downgrade -1

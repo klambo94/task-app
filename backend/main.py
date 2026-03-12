@@ -1,17 +1,13 @@
-import os
+from starlette import status
+from starlette.status import HTTP_404_NOT_FOUND
 
-from config import FRONT_END_URL
-from database import Base, engine, SessionLocal
-from fastapi import FastAPI
+from settings import FRONT_END_URL
+from fastapi import FastAPI, HTTPException
 
-from routers import auth, boards, tasks
+from routers import auth, orgs, spaces, sprint, labels, status, comments, threads, users
 from fastapi.middleware.cors import CORSMiddleware
 
-from models import User, Account, Session, VerificationToken, Board, Task
 
-
-#Create tables
-Base.metadata.create_all(engine)
 psinaptic = FastAPI()
 
 
@@ -27,8 +23,14 @@ psinaptic.add_middleware(
 
 @psinaptic.get("/")
 async def root():
-    return {"message": "Hello Tasks!"}
+    raise HTTPException(status_code=HTTP_404_NOT_FOUND)
 
 psinaptic.include_router(auth.router)
-psinaptic.include_router(boards.router)
-psinaptic.include_router(tasks.router)
+psinaptic.include_router(users.router)
+psinaptic.include_router(orgs.router)
+psinaptic.include_router(spaces.router)
+psinaptic.include_router(sprint.router)
+psinaptic.include_router(threads.router)
+psinaptic.include_router(status.router)
+psinaptic.include_router(labels.router)
+psinaptic.include_router(comments.router)

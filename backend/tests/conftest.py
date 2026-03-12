@@ -1,39 +1,45 @@
+from starlette.testclient import TestClient
+
+from main import psinaptic
+from settings import DATABASE_URL
 import pytest
-from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from database import Base
-from main import app, get_db
+import settings # loads .env
+from database import Base, get_db
+import models  # registers all models
 
-TEST_DATABASE_URL = "sqlite:///:memory:"
-TEST_ENGINE = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
-TestSessionLocal = sessionmaker(bind=TEST_ENGINE)
-Base.metadata.create_all(bind=TEST_ENGINE)
 
-@pytest.fixture(scope="function")
-def db():
-    print("\n--- db fixture ---")
-    connection = TEST_ENGINE.connect()
+engine = create_engine(DATABASE_URL)
+TestingSessionLocal = sessionmaker(bind=engine)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_db():
+    """Create all tables once for the test session."""
+    Base.metadata.create_all(bind=engine)
+    yield
+    Base.metadata.drop_all(bind=engine)
+
+
+@pytest.fixture
+def session():
+    connection = engine.connect()
     transaction = connection.begin()
-    session = TestSessionLocal(bind=connection)
-    try:
-        yield session
-    finally:
-        session.close()
-        transaction.rollback()  # rolls back all changes, table stays intact
-        connection.close()
+    session = TestingSessionLocal(bind=connection)
+    yield session
+    session.close()
+    transaction.rollback()
+    connection.close()
 
-@pytest.fixture(scope="function")
-def client(db):
+
+@pytest.fixture
+def client(session):
     def override_get_db():
-        print("\n--- override_get_db called ---")
-        print("session bind:", db.bind)
-        yield db
+        yield session
 
-    app.dependency_overrides[get_db] = override_get_db
-    print("\n--- dependency override set ---")
-    print("overrides:", app.dependency_overrides)
-    with TestClient(app) as c:
+    psinaptic.dependency_overrides[get_db] = override_get_db
+    with TestClient(psinaptic) as c:
         yield c
-    app.dependency_overrides.clear()
+    psinaptic.dependency_overrides.clear()

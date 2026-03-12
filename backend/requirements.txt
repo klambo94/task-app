@@ -1,8 +1,11 @@
 fastapi
 sqlalchemy
 pydantic
+pydantic[email]
 uvicorn
 pytest
 httpx
 psycopg2
 dotenv
+alembic
+python-slugify

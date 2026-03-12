@@ -57,3 +57,10 @@ next-env.d.ts
 .env*
 frontend/.env*
 backend/.env*
+
+
+# Docker volumes (if you define them locally)
+postgres_data/
+
+# OS
+.DS_Store
