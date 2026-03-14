@@ -65,6 +65,8 @@ class TestLabelRoutes:
             headers=auth(user),
             json={"name": "Renamed"}
         )
+
+        print(response.json())
         assert response.status_code == 200
         assert response.json()["data"]["name"] == "Renamed"
 
@@ -75,6 +77,7 @@ class TestLabelRoutes:
             headers=auth(user),
             json={"name": "Ghost"}
         )
+        print(response.json())
         assert response.status_code == 404
 
     def test_delete_label(self, client, session):

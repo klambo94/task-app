@@ -1,5 +1,3 @@
-//all api calls to back end
-
 import {TaskStatus, TaskUpdate, TaskCreate, Task} from "@/app/lib/types";
 
 

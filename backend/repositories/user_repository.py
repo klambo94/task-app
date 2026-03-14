@@ -6,15 +6,27 @@ from sqlalchemy.orm import Session
 
 from database import SessionLocal
 from models import User
-from schemas.user_schema import UserUpdate
+from schemas.user_schema import UserUpdate, UserCreate
 
 log = logging.getLogger(__name__)
 
+def create(user_in: UserCreate, session: Session):
+    from utils import generate_id
+    user = User(
+        id=generate_id(),
+        email=user_in.email,
+        name=user_in.name,
+        image=user_in.image,
+    )
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user
 def get_by_id(user_id: str, session: Session):
     log.debug(f"get_user_by_id: {user_id}")
     return session.query(User).filter(User.id == user_id).first()
 
-def get_by_email(email: EmailStr, session: Session = Depends(SessionLocal)):
+def get_by_email(email: str, session: Session = Depends(SessionLocal)):
     log.debug(f"get_user_by_email: {email}")
     return session.query(User).filter(User.email == email).first()
 

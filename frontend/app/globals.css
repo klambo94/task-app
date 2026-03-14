@@ -98,6 +98,9 @@
     .logo {
         @apply font-cormorant text-3xl font-medium tracking-[.08em] text-mycopsi-brown-100
     }
+    .sign-in-form {
+        @apply flex flex-col items-center justify-center gap-4 flex-1
+    }
 
     .hero {
         animation: fade-up 0.9s ease forwards;
@@ -123,9 +126,14 @@
     em {
         @apply italic text-mycopsi-yellow-100
     }
-
+    .heading {
+        @apply font-cormorant text-mycopsi-brown-100  tracking-wide
+    }
+    .sub-heading {
+        @apply font-dm-sans text-xs text-mycopsi-brown-200 tracking-wide
+    }
     .hero-sub {
-        @apply text-xl text-mycopsi-brown-200 leading-none max-w-96 mb-10 font-light
+        @apply text-xl text-mycopsi-brown-100 leading-none max-w-96 mb-10 font-light
     }
 
     .hero-actions {

@@ -1,5 +1,4 @@
 from helpers import make_user, auth
-from settings import INTERNAL_SECRET
 
 
 class TestUserRoutes:
@@ -10,9 +9,9 @@ class TestUserRoutes:
         assert response.status_code == 200
         assert response.json()["data"]["id"] == user.id
 
-    def test_get_me_not_found(self, client, session):
-        response = client.get("/api/users/me", headers={"x-internal-secret": INTERNAL_SECRET, "x-user-id": "nonexistent-id"})
-        assert response.status_code == 404
+    def test_get_me_unauthenticated(self, client, session):
+        response = client.get("/api/users/me", headers={"Authorization": "Bearer invalidtoken"})
+        assert response.status_code == 401
 
     def test_get_user_by_id(self, client, session):
         user = make_user(session)

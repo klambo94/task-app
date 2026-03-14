@@ -1,13 +1,21 @@
+import jwt
 from sqlalchemy.orm import Session
 
+import settings
 from enums import SpaceVisibility, ThreadPriority
 from schemas import OrganizationCreate, SpaceCreate, SprintCreate, ThreadCreate, LabelCreate
 from repositories import organization_repository, space_repository, sprint_repository, thread_repository, label_repository
-from settings import INTERNAL_SECRET
+
+def make_test_token(user) -> str:
+    return jwt.encode(
+        {"email": user.email, "name": getattr(user, "name", ""), "sub": user.id},
+        settings.NEXTAUTH_SECRET,
+        algorithm="HS256"
+    )
 
 
 def auth(user) -> dict:
-    return {"x-internal-secret": INTERNAL_SECRET, "x-user-id": user.id}
+    return {"Authorization": f"Bearer {make_test_token(user)}"}
 
 def make_user(session, email="test@example.com", name="Test User"):
     from models.auth_models import User

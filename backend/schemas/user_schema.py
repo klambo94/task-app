@@ -5,9 +5,11 @@ from typing import Optional
 
 class UserBase(BaseModel):
     name: Optional[str] = None
-    email: EmailStr
+    email: str
     image: Optional[str] = None
 
+class UserCreate(UserBase):
+    pass
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None

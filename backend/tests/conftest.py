@@ -1,3 +1,5 @@
+import jwt
+from fastapi import Header
 from starlette.testclient import TestClient
 
 from main import psinaptic
@@ -8,8 +10,8 @@ from sqlalchemy.orm import sessionmaker
 
 import settings  # loads .env
 from database import Base, get_db
+from dependencies.auth import get_current_user
 import models  # registers all models
-
 
 
 engine = create_engine(DATABASE_URL)
@@ -36,7 +38,7 @@ def session():
 
 
 @pytest.fixture
-def client(session, monkeypatch):
+def client(session):
     def override_get_db():
         yield session
 

@@ -45,24 +45,26 @@ def update_label(
     current_user=Depends(get_current_user),
     session: Session = Depends(get_db)
 ):
-    if not access_repository.can_access_space(current_user.id, label_in.spaceId, session):
-        raise HTTPException(status_code=403, detail="Access denied")
-    label = label_repository.update(label_id, label_in, session)
+    label = label_repository.get_by_id(label_id, session)
     if not label:
         raise HTTPException(status_code=404, detail="Label not found")
-    return DataResponse(data=label)
+    if not access_repository.can_access_space(current_user.id, label.spaceId, session):
+        raise HTTPException(status_code=403, detail="Access denied")
 
+    updated = label_repository.update(label_id, label_in, session)
+    return DataResponse(data=updated)
 
 @router.delete("/labels/{label_id}")
 def delete_label(
     label_id: str,
-    space_id: str,
-    current_user=Depends(get_current_user),
+    current_user=Depends(get_current_user),  # ← remove space_id param
     session: Session = Depends(get_db)
 ):
-    if not access_repository.can_access_space(current_user.id, space_id, session):
-        raise HTTPException(status_code=403, detail="Access denied")
-    success = label_repository.delete(label_id, session)
-    if not success:
+    label = label_repository.get_by_id(label_id, session)
+    if not label:
         raise HTTPException(status_code=404, detail="Label not found")
+    if not access_repository.can_access_space(current_user.id, label.spaceId, session):
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    label_repository.delete(label_id, session)
     return {"message": "Label deleted"}
