@@ -1,10 +1,4 @@
 services:
-  postgres_db:
-    container_name: task_app_db
-    image: postgres:17
-    restart: always
-
-
   backend:
     build: ./backend
     container_name: task_app_backend

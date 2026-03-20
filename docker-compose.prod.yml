@@ -1,12 +1,4 @@
 services:
-  postgres_db:
-    image: postgres:17
-    restart: always
-    env_file:
-      - .env.prod
-    volumes:
-      - task_app_postgres_prod:/var/lib/postgresql/18/docker
-
   backend:
     build:
       target: prod

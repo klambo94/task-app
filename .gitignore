@@ -1,4 +1,6 @@
 backend/*.db
+backend/scripts/db/setup_roles.sql
+
 backend/.venv/
 .idea/
 # Default ignored files
@@ -45,6 +47,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+frontend/.env*
+backend/.env*
 
 # vercel
 .vercel
@@ -52,6 +56,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-.env*
-frontend/.env*
-backend/.env*

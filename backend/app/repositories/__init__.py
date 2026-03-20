@@ -1,0 +1,12 @@
+from app.repositories.user_repository import UserRepository
+from app.repositories.org_repository import OrgRepository, OrgMemberRepository
+from app.repositories.space_repository import SpaceRepository
+from app.repositories.status_repository import StatusRepository
+from app.repositories.iteration_repository import IterationRepository
+from app.repositories.thread_repository import ThreadRepository
+from app.repositories.thread_activity_repository import ThreadActivityRepository
+from app.repositories.comment_repository import CommentRepository
+from app.repositories.attachment_repository import AttachmentRepository
+from app.repositories.label_repository import LabelRepository
+from app.repositories.notification_repository import NotificationRepository
+from app.repositories.invitation_repository import InvitationRepository

@@ -1,13 +1,4 @@
 services:
-  postgres_db:
-    restart: always
-    env_file:
-      - .env.dev
-    volumes:
-      - task_app_postgres_dev:/var/lib/postgresql/18/docker
-    ports:
-      - "5432:5432"  # expose for local DB tools like DBeaver
-
   backend:
     env_file:
       - backend/.env.dev
