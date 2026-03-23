@@ -74,10 +74,12 @@ class OrgMemberRepository:
     # Reads
     # ------------------------------------------------------------------
 
-    def get_by_id(self, member_id: str) -> OrgMember | None:
+    def get_by_id(self, org_id: str, member_id: str) -> OrgMember | None:
         return (
             self.db.query(OrgMember)
-            .filter(OrgMember.id == member_id, OrgMember.deletedAt.is_(None))
+            .filter(OrgMember.orgId == org_id ,
+                    OrgMember.id == member_id,
+                    OrgMember.deletedAt.is_(None))
             .first()
         )
 

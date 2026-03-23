@@ -6,7 +6,7 @@ from app.lib.pagination import CursorPage
 
 class LabelBase(BaseModel):
     name: str
-    colour: str = "#6B7280"
+    color: str = "#6B7280"
 
 
 class LabelCreate(LabelBase):
@@ -15,7 +15,7 @@ class LabelCreate(LabelBase):
 
 class LabelUpdate(BaseModel):
     name: str | None = None
-    colour: str | None = None
+    color: str | None = None
 
 
 class LabelRead(LabelBase):

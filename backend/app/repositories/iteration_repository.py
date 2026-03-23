@@ -22,6 +22,13 @@ class IterationRepository:
             .first()
         )
 
+    def get_by_title(self, iteration_title: str) -> Iteration | None:
+        return (
+            self.db.query(Iteration)
+            .filter(Iteration.title == iteration_title, Iteration.deletedAt.is_(None))
+            .first()
+        )
+
     def list_by_space(
             self,
             space_id: str,
@@ -43,16 +50,16 @@ class IterationRepository:
         query = query.order_by(Iteration.createdAt.desc(), Iteration.id.desc())
         return paginate(query, cursor, limit)
 
-    # ------------------------------------------------------------------
-    # Writes
-    # ------------------------------------------------------------------
+        # ------------------------------------------------------------------
+        # Writes
+        # ------------------------------------------------------------------
 
     def create(
             self,
             space_id: str,
             status_id: str,
             title: str,
-            type: IterationType = IterationType.SPRINT,
+            iteration_type: IterationType = IterationType.SPRINT,
             description: str | None = None,
             goal: str | None = None,
             start_date: datetime | None = None,
@@ -62,7 +69,7 @@ class IterationRepository:
             id=generate_id(),
             spaceId=space_id,
             statusId=status_id,
-            type=type,
+            type=iteration_type,
             title=title,
             description=description,
             goal=goal,
@@ -76,7 +83,7 @@ class IterationRepository:
     def update(
             self,
             iteration: Iteration,
-            type: IterationType | None = None,
+            iteration_type: IterationType | None = None,
             status_id: str | None = None,
             title: str | None = None,
             description: str | None = None,
@@ -84,8 +91,8 @@ class IterationRepository:
             start_date: datetime | None = None,
             end_date: datetime | None = None,
     ) -> Iteration:
-        if type is not None:
-            iteration.type = type
+        if iteration_type is not None:
+            iteration.type = iteration_type
         if status_id is not None:
             iteration.statusId = status_id
         if title is not None:

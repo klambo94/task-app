@@ -6,7 +6,7 @@ from app.lib.pagination import CursorPage
 
 class StatusBase(BaseModel):
     name: str
-    colour: str = "#6B7280"
+    color: str = "#6B7280"
     category: StatusCategory = StatusCategory.TODO
     sortOrder: int = 0
 
@@ -17,7 +17,7 @@ class StatusCreate(StatusBase):
 
 class StatusUpdate(BaseModel):
     name: str | None = None
-    colour: str | None = None
+    color: str | None = None
     category: StatusCategory | None = None
     sortOrder: int | None = None
 

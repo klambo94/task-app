@@ -58,13 +58,13 @@ class LabelRepository:
             self,
             space_id: str,
             name: str,
-            colour: str = "#6B7280",
+            color: str = "#6B7280",
     ) -> Label:
         label = Label(
             id=generate_id(),
             spaceId=space_id,
             name=name,
-            colour=colour,
+            color=color,
         )
         self.db.add(label)
         self.db.flush()
@@ -74,12 +74,12 @@ class LabelRepository:
             self,
             label: Label,
             name: str | None = None,
-            colour: str | None = None,
+            color: str | None = None,
     ) -> Label:
         if name is not None:
             label.name = name
-        if colour is not None:
-            label.colour = colour
+        if color is not None:
+            label.color = color
         self.db.flush()
         return label
 

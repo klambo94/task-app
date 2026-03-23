@@ -111,6 +111,7 @@ class InvitationRepository:
                 Invitation.expiresAt < now,
                 Invitation.deletedAt.is_(None),
             )
+            # Bypasses SQLAlchemy onupdate hooks
             .update({"status": InvitationStatus.EXPIRED})
         )
         self.db.flush()

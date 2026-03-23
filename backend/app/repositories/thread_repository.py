@@ -2,8 +2,11 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from app.lib import paginate, CursorPage, generate_id
+from app.models import Label
 from app.models.thread_model import Thread
 from app.models.enums import ThreadPriority
+from app.schemas import ThreadUpdate
+from app.schemas.thread_filter import ThreadFilter
 
 
 class ThreadRepository:
@@ -23,36 +26,28 @@ class ThreadRepository:
         )
 
     def list_by_space(
-        self,
-        space_id: str,
-        status_id: str | None = None,
-        assignee_id: str | None = None,
-        reporter_id: str | None = None,
-        priority: ThreadPriority | None = None,
-        iteration_id: str | None = None,
-        cursor: str | None = None,
-        limit: int = 20,
+            self,
+            space_id: str,
+            thread_filter: ThreadFilter | None = None,
+            cursor: str | None = None,
+            limit: int = 20,
     ) -> CursorPage:
-        """
-        List threads for a space with optional filters. Supports filtering
-        by status, assignee, reporter, priority, and iteration so a single
-        endpoint can serve both the board view and the backlog view.
-        """
         query = (
             self.db.query(Thread)
             .filter(Thread.spaceId == space_id, Thread.deletedAt.is_(None))
         )
 
-        if status_id is not None:
-            query = query.filter(Thread.statusId == status_id)
-        if assignee_id is not None:
-            query = query.filter(Thread.assigneeId == assignee_id)
-        if reporter_id is not None:
-            query = query.filter(Thread.reporterId == reporter_id)
-        if priority is not None:
-            query = query.filter(Thread.priority == priority)
-        if iteration_id is not None:
-            query = query.filter(Thread.iterationId == iteration_id)
+        if thread_filter is not None:
+            if thread_filter.status_id is not None:
+                query = query.filter(Thread.statusId == thread_filter.status_id)
+            if thread_filter.assignee_id is not None:
+                query = query.filter(Thread.assigneeId == thread_filter.assignee_id)
+            if thread_filter.reporter_id is not None:
+                query = query.filter(Thread.reporterId == thread_filter.reporter_id)
+            if thread_filter.priority is not None:
+                query = query.filter(Thread.priority == thread_filter.priority)
+            if thread_filter.iteration_id is not None:
+                query = query.filter(Thread.iterationId == thread_filter.iteration_id)
 
         query = query.order_by(Thread.sortOrder.asc(), Thread.createdAt.desc(), Thread.id.desc())
         return paginate(query, cursor, limit)
@@ -109,34 +104,24 @@ class ThreadRepository:
         self.db.flush()
         return thread
 
-    def update(
-        self,
-        thread: Thread,
-        status_id: str | None = None,
-        assignee_id: str | None = None,
-        iteration_id: str | None = None,
-        title: str | None = None,
-        body: str | None = None,
-        priority: ThreadPriority | None = None,
-        due_date: datetime | None = None,
-        sort_order: int | None = None,
-    ) -> Thread:
-        if status_id is not None:
-            thread.statusId = status_id
-        if assignee_id is not None:
-            thread.assigneeId = assignee_id
-        if iteration_id is not None:
-            thread.iterationId = iteration_id
-        if title is not None:
-            thread.title = title
-        if body is not None:
-            thread.body = body
-        if priority is not None:
-            thread.priority = priority
-        if due_date is not None:
-            thread.dueDate = due_date
-        if sort_order is not None:
-            thread.sortOrder = sort_order
+    def update(self, thread: Thread,
+               update: ThreadUpdate) -> Thread:
+        if update.statusId is not None:
+            thread.statusId = update.statusId
+        if update.assigneeId is not None:
+            thread.assigneeId = update.assigneeId
+        if update.iterationId is not None:
+            thread.iterationId = update.iterationId
+        if update.title is not None:
+            thread.title = update.title
+        if update.body is not None:
+            thread.body = update.body
+        if update.priority is not None:
+            thread.priority = update.priority
+        if update.dueDate is not None:
+            thread.dueDate = update.dueDate
+        if update.sortOrder is not None:
+            thread.sortOrder = update.sortOrder
         self.db.flush()
         return thread
 
@@ -156,3 +141,14 @@ class ThreadRepository:
         thread.deletedAt = datetime.now(timezone.utc)
         self.db.flush()
         return thread
+
+    def add_label(self, thread: Thread, label: Label) -> Thread:
+        if label not in thread.labels:
+            thread.labels.append(label)
+            self.db.flush()
+        return thread
+
+    def remove_label(self, thread: Thread, label: Label) -> Thread:
+        if label in thread.labels:
+            thread.labels.remove(label)
+            self.db.flush()

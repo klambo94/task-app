@@ -29,6 +29,7 @@ class ThreadUpdate(BaseModel):
     priority: ThreadPriority | None = None
     dueDate: datetime | None = None
     sortOrder: int | None = None
+    labels: list[str] | None = None
 
 
 class ThreadRead(ThreadBase):

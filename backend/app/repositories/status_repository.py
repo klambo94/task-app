@@ -23,6 +23,14 @@ class StatusRepository:
             .first()
         )
 
+
+    def get_by_name(self, name: str) -> Status | None:
+        return (
+            self.db.query(Status)
+            .filter(Status.name == name, Status.deletedAt.is_(None))
+            .first()
+        )
+
     def list_by_space(self, space_id: str, cursor: str | None = None, limit: int = 20) -> CursorPage:
         query = (
             self.db.query(Status)
@@ -30,7 +38,6 @@ class StatusRepository:
             .order_by(Status.sortOrder.asc(), Status.createdAt.desc(), Status.id.desc())
         )
         return paginate(query, cursor, limit)
-
     # ------------------------------------------------------------------
     # Writes
     # ------------------------------------------------------------------
@@ -39,7 +46,7 @@ class StatusRepository:
         self,
         space_id: str,
         name: str,
-        colour: str = "#6B7280",
+        color: str = "#6B7280",
         category: StatusCategory = StatusCategory.TODO,
         sort_order: int = 0,
     ) -> Status:
@@ -47,7 +54,7 @@ class StatusRepository:
             id=generate_id(),
             spaceId=space_id,
             name=name,
-            colour=colour,
+            color=color,
             category=category,
             sortOrder=sort_order,
         )
@@ -59,14 +66,14 @@ class StatusRepository:
         self,
         status: Status,
         name: str | None = None,
-        colour: str | None = None,
+        color: str | None = None,
         category: StatusCategory | None = None,
         sort_order: int | None = None,
     ) -> Status:
         if name is not None:
             status.name = name
-        if colour is not None:
-            status.colour = colour
+        if color is not None:
+            status.color = color
         if category is not None:
             status.category = category
         if sort_order is not None:

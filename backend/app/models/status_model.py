@@ -18,9 +18,9 @@ class Status(TimestampMixin, Base):
     id = Column(String, primary_key=True, doc="Internal PK; set via generate_id().")
     spaceId = Column(String, ForeignKey("space.id", ondelete="CASCADE"), nullable=False, doc="FK to the owning space.")
     name = Column(String, nullable=False, doc="Display name of the status (e.g. 'In Review').")
-    colour = Column(
+    color = Column(
         String, nullable=False, default="#6B7280",
-        doc="Hex colour string used to render the status badge in the UI.",
+        doc="Hex color string used to render the status badge in the UI.",
     )
     category = Column(
         Enum(StatusCategory), nullable=False, default=StatusCategory.TODO,

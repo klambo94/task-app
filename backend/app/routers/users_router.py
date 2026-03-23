@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db, get_current_user
+from app.core.database import get_db
+from app.core.deps import get_current_user
 from app.models import User
 from app.repositories import UserRepository
 from app.schemas import UserPage, UserRead, UserUpdate
